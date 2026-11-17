@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#12324a">
+<title>Scaffold Design Check</title>
+<style>
+:root{--ink:#10212e;--navy:#12324a;--bg:#eef2f5;--card:#fff;--line:#c9d3db;--muted:#5a6b78;--pass:#12803f;--fail:#c81e1e;--na:#6b7780;--amber:#b45309}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px}
+header h1{font-size:19px;margin:0;flex:1}
+header button{background:transparent;border:1px solid #ffffff80;color:#fff;border-radius:8px;padding:8px 12px;font-size:15px}
+main{max-width:640px;margin:0 auto;padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+h2{font-size:18px;margin:0}
+.muted{color:var(--muted);font-size:15px;margin:0}
+.btn{display:block;width:100%;border:0;border-radius:10px;padding:15px;font-size:18px;font-weight:700;background:var(--navy);color:#fff;text-align:center}
+.btn.light{background:#fff;color:var(--navy);border:2px solid var(--navy)}
+.btn.small{font-size:15px;padding:10px;font-weight:600}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+label{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:600;color:var(--muted)}
+input[type=text],input[type=number],textarea{font:inherit;padding:11px;border:1px solid var(--line);border-radius:8px;width:100%;color:var(--ink);background:#fff}
+.tag{display:inline-block;font-size:12px;font-weight:700;border:1px solid var(--amber);color:var(--amber);border-radius:99px;padding:1px 8px;margin-left:6px;vertical-align:middle}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+canvas{max-width:100%;display:block;border-radius:8px;touch-action:none}
+#photoWrap{position:sticky;top:58px;z-index:4;background:var(--card);padding-bottom:6px}
+#markBanner{background:var(--fail);color:#fff;font-weight:700;padding:10px;border-radius:8px;text-align:center}
+.item{border:2px solid var(--line);border-radius:12px;padding:12px;background:#fff;display:flex;flex-direction:column;gap:8px}
+.item.P{border-color:var(--pass)}.item.F{border-color:var(--fail);background:#fff5f5}.item.N{border-color:var(--na)}
+.item .q{font-weight:700;font-size:17px}
+.item .n{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-size:14px;margin-right:8px;flex:none}
+.item .design{background:#e7f0f7;border-left:5px solid var(--navy);padding:8px 10px;border-radius:6px;font-size:18px;font-weight:700}
+.pf{display:grid;grid-template-columns:1fr 1fr .7fr;gap:8px}
+.pf button{border:2px solid var(--line);background:#fff;border-radius:10px;padding:14px 4px;font-size:17px;font-weight:800;color:var(--ink)}
+.pf button.on.P{background:var(--pass);border-color:var(--pass);color:#fff}
+.pf button.on.F{background:var(--fail);border-color:var(--fail);color:#fff}
+.pf button.on.N{background:var(--na);border-color:var(--na);color:#fff}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px;z-index:6}
+.bar .in{max-width:640px;margin:0 auto}
+.result{font-size:22px;font-weight:800;color:#fff;text-align:center;border-radius:12px;padding:16px}
+.result.ok{background:var(--pass)}.result.bad{background:var(--fail)}
+#sig{border:2px dashed var(--line);background:#fff;width:100%;height:150px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><h1 id="title">Scaffold Design Check</h1><button id="back" hidden>Back</button></header>
+
+<main id="home">
+  <div class="card">
+    <h2>1. Choose the scaffold</h2>
+    <p class="muted">Pick the scaffold you are checking. If it is not in the list, ask your Safety Coordinator for the design file.</p>
+    <div id="designList" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+  <div class="card">
+    <h2>For the Safety Coordinator</h2>
+    <button class="btn light small" id="newDesign">Add a P.E. design</button>
+    <button class="btn light small" id="importBtn">Load a design file sent to you</button>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+  </div>
+</main>
+
+<main id="form" hidden>
+  <div class="card">
+    <h2>P.E. design details</h2>
+    <p class="muted">Type the key points from the P.E. drawing. Leave a box empty if the design does not state it.</p>
+    <label>Scaffold name / location<input type="text" id="f-name" placeholder="e.g. Tower B, Grid 5-7, L8 to L12"></label>
+    <label>P.E. design reference<input type="text" id="f-ref" placeholder="e.g. NPP-JH-SCF-012 Rev B"></label>
+    <div class="grid2">
+      <label>Max height (m)<input type="number" id="f-height" step="0.1" inputmode="decimal"></label>
+      <label>Number of lifts<input type="number" id="f-lifts" step="1" inputmode="numeric"></label>
+      <label>Bay length (m)<input type="number" id="f-bayLen" step="0.1" inputmode="decimal"></label>
+      <label>Bay width (m)<input type="number" id="f-bayWid" step="0.1" inputmode="decimal"></label>
+      <label>Lift height (m)<input type="number" id="f-lift" step="0.1" inputmode="decimal"></label>
+      <label>Working platforms<input type="number" id="f-plats" step="1" inputmode="numeric"></label>
+      <label>Tie spacing, up (m)<input type="number" id="f-tieV" step="0.1" inputmode="decimal"></label>
+      <label>Tie spacing, along (m)<input type="number" id="f-tieH" step="0.1" inputmode="decimal"></label>
+      <label>Max load per bay (kg)<input type="number" id="f-load" step="1" inputmode="numeric"></label>
+    </div>
+    <label>Bracing shown in design<input type="text" id="f-brace" placeholder="e.g. Facade brace every 5 bays, ledger brace every 2nd standard"></label>
+    <label>Base shown in design<input type="text" id="f-base" placeholder="e.g. Base plate on 225 x 38 timber sole plate"></label>
+    <label>Extras allowed by design<input type="text" id="f-extra" placeholder="e.g. Safety net on outer face. No cantilever."></label>
+    <label>Photo of the P.E. drawing (checkers can open it)<input type="file" id="f-drawing" accept="image/*"></label>
+    <canvas id="f-preview" hidden></canvas>
+    <button class="btn" id="saveDesign">Save design</button>
+    <button class="btn light small" id="shareDesign" hidden>Send this design file to the team</button>
+    <button class="btn light small" id="deleteDesign" hidden style="border-color:var(--fail);color:var(--fail)">Delete this design</button>
+  </div>
+</main>
+
+<main id="check" hidden>
+  <div class="card" id="photoCard">
+    <h2>2. Take a photo of the scaffold</h2>
+    <p class="muted">Stand back so the whole scaffold face is in the photo.</p>
+    <div class="row">
+      <button class="btn" id="camBtn">Open camera</button>
+      <button class="btn light" id="galBtn">Pick a photo</button>
+    </div>
+    <input type="file" id="camFile" accept="image/*" capture="environment" hidden>
+    <input type="file" id="galFile" accept="image/*" hidden>
+  </div>
+  <div class="card" id="workCard" hidden>
+    <div id="photoWrap">
+      <div id="markBanner" hidden></div>
+      <canvas id="photo"></canvas>
+      <div class="row" style="margin-top:6px">
+        <button class="btn light small" id="undoMark">Remove last mark</button>
+        <button class="btn light small" id="showDrawing">Show P.E. drawing</button>
+      </div>
+    </div>
+    <img id="drawingImg" alt="P.E. drawing" hidden style="max-width:100%;border:1px solid var(--line);border-radius:8px">
+    <h2>3. Compare with the design</h2>
+    <p class="muted">For each point press SAME or WRONG. When you press WRONG, tap the photo where the problem is.</p>
+    <div id="items" style="display:flex;flex-direction:column;gap:12px"></div>
+    <h2>4. Your name and signature</h2>
+    <label>Name<input type="text" id="who" autocomplete="name"></label>
+    <canvas id="sig"></canvas>
+    <button class="btn light small" id="clearSig">Clear signature</button>
+  </div>
+  <div class="bar" id="checkBar" hidden><div class="in"><button class="btn" id="finish">Finish</button></div></div>
+</main>
+
+<main id="report" hidden>
+  <div class="result" id="resultBox"></div>
+  <div class="card">
+    <canvas id="reportCanvas"></canvas>
+    <button class="btn" id="shareReport">Send report (WhatsApp)</button>
+    <button class="btn light" id="saveReport">Save report to phone</button>
+    <button class="btn light small" id="again">Check another scaffold</button>
+  </div>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var VIEWS=['home','form','check','report'];
+var store={get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}};
+
+var EXAMPLE={id:'example',example:true,name:'EXAMPLE: Tower B east face, L8 to L12',ref:'NPP-JH-SCF-000 Rev A',height:12,lifts:6,bayLen:2.4,bayWid:1.2,lift:2,plats:2,tieV:4,tieH:4.8,load:220,brace:'Facade brace every 5 bays',base:'Base plate on timber sole plate',extra:'Safety net on outer face. No cantilever.',drawing:''};
+var designs=store.get('scf.designs',null)||[EXAMPLE];
+var editing=null, cur=null;
+
+function v(x,unit){return (x===''||x==null||isNaN(x))?null:(x+(unit||''));}
+/* Each point: question, and what the design says (null = not stated, general rule only) */
+var ITEMS=[
+ {q:'Is the scaffold height the same as the design, or lower?',d:function(d){return v(d.height,' m high')&&('Design: not more than '+d.height+' m high'+(v(d.lifts)?' ('+d.lifts+' lifts)':''));}},
+ {q:'Is the distance between standards along the scaffold (bay length) the same as the design?',d:function(d){return v(d.bayLen)&&('Design: bay length '+d.bayLen+' m');}},
+ {q:'Is the scaffold width (bay width) the same as the design?',d:function(d){return v(d.bayWid)&&('Design: bay width '+d.bayWid+' m');}},
+ {q:'Is the height between ledgers (lift height) the same as the design?',d:function(d){return v(d.lift)&&('Design: lift height '+d.lift+' m');}},
+ {q:'Is the number of working platforms the same as the design, or fewer?',d:function(d){return v(d.plats)&&('Design: '+d.plats+' working platform'+(d.plats==1?'':'s'));}},
+ {q:'Is the scaffold tied to the building at the spacing in the design?',d:function(d){return (v(d.tieV)||v(d.tieH))&&('Design: ties every '+(v(d.tieV,' m up')||'?')+', every '+(v(d.tieH,' m along')||'?'));}},
+ {q:'Is the bracing fixed as shown in the design? No brace removed?',d:function(d){return d.brace&&('Design: '+d.brace);}},
+ {q:'Are the base plates and sole plates as shown in the design, on firm ground?',d:function(d){return d.base&&('Design: '+d.base);}},
+ {q:'Nothing added that is not in the design? (extra lift, cantilever, hoist, canvas, netting)',d:function(d){return d.extra&&('Design: '+d.extra);}},
+ {q:'Is the load on the platform within the design limit? No stacked materials?',d:function(d){return v(d.load)&&('Design: not more than '+d.load+' kg per bay');}},
+ {q:'Top guardrail and mid-rail fixed at every open side?',d:function(){return null;}},
+ {q:'Toe boards fitted at every working platform?',d:function(){return null;}},
+ {q:'Platforms fully boarded and secured? No gaps, no loose planks?',d:function(){return null;}},
+ {q:'Safe access provided? (ladder or stairs, secured)',d:function(){return null;}},
+ {q:'Green SAFE TO USE tag displayed, and inspected within the last 7 days?',d:function(){return null;}}
+];
+
+function show(id){VIEWS.forEach(function(n){$(n).hidden=n!==id;});$('back').hidden=id==='home';$('checkBar').hidden=!(id==='check'&&cur&&cur.img);window.scrollTo(0,0);}
+$('back').onclick=function(){renderHome();show('home');};
+
+/* ---------------- images ---------------- */
+function loadImage(file,max,cb){
+  var r=new FileReader();
+  r.onload=function(){var im=new Image();im.onload=function(){
+    var s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');
+    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    var url=c.toDataURL('image/jpeg',0.8),out=new Image();out.onload=function(){cb(out,url);};out.src=url;
+  };im.onerror=function(){alert('This file is not a photo. Please choose a photo.');};im.src=r.result;};
+  r.readAsDataURL(file);
+}
+function drawPhoto(c,img,marks,w){
+  c.width=w;c.height=Math.round(w*img.height/img.width);
+  var x=c.getContext('2d');x.drawImage(img,0,0,c.width,c.height);
+  var R=w*0.055;
+  marks.forEach(function(m){
+    var px=m.x*c.width,py=m.y*c.height;
+    x.lineWidth=R*0.34;x.strokeStyle='#fff';x.beginPath();x.arc(px,py,R,0,6.2832);x.stroke();
+    x.lineWidth=R*0.2;x.strokeStyle='#e11d1d';x.beginPath();x.arc(px,py,R,0,6.2832);x.stroke();
+    var bx=px+R*0.75,by=py-R*0.75,br=R*0.5;
+    x.fillStyle='#e11d1d';x.beginPath();x.arc(bx,by,br,0,6.2832);x.fill();
+    x.strokeStyle='#fff';x.lineWidth=br*0.18;x.stroke();
+    x.fillStyle='#fff';x.font='bold '+Math.round(br*1.15)+'px Arial';x.textAlign='center';x.textBaseline='middle';x.fillText(String(m.n),bx,by+br*0.05);
+  });
+}
+
+/* ---------------- home ---------------- */
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function renderHome(){
+  $('title').textContent='Scaffold Design Check';
+  $('designList').innerHTML=designs.length?designs.map(function(d,i){
+    return '<div class="item"><div class="q">'+esc(d.name)+'</div><div class="muted">'+esc(d.ref||'No design reference')+'</div>'+
+      '<button class="btn" data-check="'+i+'">Check this scaffold</button><button class="btn light small" data-edit="'+i+'">Open design details</button></div>';
+  }).join(''):'<p class="muted">No designs on this phone yet.</p>';
+}
+$('designList').onclick=function(e){
+  var b=e.target.closest('button');if(!b)return;
+  if(b.dataset.check!=null)startCheck(designs[+b.dataset.check]);
+  else if(b.dataset.edit!=null)openForm(designs[+b.dataset.edit]);
+};
+$('newDesign').onclick=function(){openForm(null);};
+$('importBtn').onclick=function(){$('importFile').click();};
+$('importFile').onchange=function(){
+  var f=this.files[0];this.value='';if(!f)return;
+  var r=new FileReader();r.onload=function(){
+    try{var d=JSON.parse(r.result);if(!d||!d.name)throw 0;d.id='d'+Date.now();delete d.example;
+      designs=designs.filter(function(x){return !(x.name===d.name&&x.ref===d.ref);});designs.unshift(d);
+      if(!store.set('scf.designs',designs))alert('Phone storage is full. The design is loaded but may not be kept.');
+      renderHome();alert('Design loaded: '+d.name);
+    }catch(err){alert('This is not a scaffold design file. Ask your Safety Coordinator to send it again.');}
+  };r.readAsText(f);
+};
+
+/* ---------------- design form ---------------- */
+var FIELDS=['name','ref','height','lifts','bayLen','bayWid','lift','plats','tieV','tieH','load','brace','base','extra'];
+var formDrawing='';
+function openForm(d){
+  editing=d;formDrawing=d?d.drawing||'':'';
+  FIELDS.forEach(function(k){$('f-'+k).value=d&&d[k]!=null?d[k]:'';});
+  $('f-drawing').value='';previewDrawing();
+  $('shareDesign').hidden=!d;$('deleteDesign').hidden=!d;
+  $('title').textContent=d?'Design details':'Add a P.E. design';show('form');
+}
+function previewDrawing(){
+  var c=$('f-preview');if(!formDrawing){c.hidden=true;return;}
+  var im=new Image();im.onload=function(){c.hidden=false;drawPhoto(c,im,[],600);};im.src=formDrawing;
+}
+$('f-drawing').onchange=function(){var f=this.files[0];if(!f)return;loadImage(f,1400,function(im,url){formDrawing=url;previewDrawing();});};
+function readForm(){
+  var d=editing||{id:'d'+Date.now()};
+  FIELDS.forEach(function(k){var el=$('f-'+k),val=el.value.trim();d[k]=el.type==='number'?(val===''?'':parseFloat(val)):val;});
+  d.drawing=formDrawing;delete d.example;return d;
+}
+$('saveDesign').onclick=function(){
+  if(!$('f-name').value.trim()){alert('Type the scaffold name or location first.');return;}
+  var d=readForm();if(designs.indexOf(d)<0)designs.unshift(d);
+  if(!store.set('scf.designs',designs))alert('Phone storage is full. Remove an old design or use a smaller drawing photo.');
+  renderHome();show('home');
+};
+$('deleteDesign').onclick=function(){
+  if(!editing||!confirm('Delete this design from this phone?'))return;
+  designs=designs.filter(function(x){return x!==editing;});store.set('scf.designs',designs);renderHome();show('home');
+};
+function saveBlob(blob,name){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);}
+function shareFile(blob,name,text){
+  var file=new File([blob],name,{type:blob.type});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:name,text:text}).catch(function(){});}
+  else{saveBlob(blob,name);alert('Saved to this phone as "'+name+'". Attach that file in WhatsApp.');}
+}
+function safeName(s){return String(s).replace(/[^\w\- ]+/g,'').trim().slice(0,50)||'scaffold';}
+$('shareDesign').onclick=function(){
+  var d=readForm();store.set('scf.designs',designs);
+  shareFile(new Blob([JSON.stringify(d)],{type:'application/json'}),'scaffold-design-'+safeName(d.name)+'.json','Scaffold design file. Open the Scaffold Design Check app and press "Load a design file sent to you".');
+};
+
+/* ---------------- check ---------------- */
+function startCheck(d){
+  cur={d:d,img:null,res:{},marks:[],notes:{},marking:null};
+  $('title').textContent=d.name;$('photoCard').hidden=false;$('workCard').hidden=true;
+  $('who').value=store.get('scf.who','');clearSig();$('drawingImg').hidden=true;
+  $('showDrawing').hidden=!d.drawing;if(d.drawing)$('drawingImg').src=d.drawing;
+  show('check');
+}
+$('camBtn').onclick=function(){$('camFile').click();};
+$('galBtn').onclick=function(){$('galFile').click();};
+function gotPhoto(){var f=this.files[0];this.value='';if(!f)return;loadImage(f,1600,function(im){cur.img=im;cur.marks=[];$('photoCard').hidden=true;$('workCard').hidden=false;$('checkBar').hidden=false;renderItems();redraw();sizeSig();});}
+$('camFile').onchange=gotPhoto;$('galFile').onchange=gotPhoto;
+function redraw(){
+  var wrap=$('photoWrap'),w=Math.min(wrap.clientWidth||600,600),c=$('photo');
+  var maxH=Math.round(window.innerHeight*0.42),h=w*cur.img.height/cur.img.width;if(h>maxH)w=Math.round(w*maxH/h);
+  drawPhoto(c,cur.img,cur.marks,Math.max(w,160)*2);c.style.width=Math.max(w,160)+'px';c.style.margin='0 auto';
+  var b=$('markBanner');b.hidden=cur.marking==null;if(cur.marking!=null)b.textContent='Tap the photo where point '+(cur.marking+1)+' is wrong';
+  var left=ITEMS.length-Object.keys(cur.res).length;$('finish').textContent=left?('Finish ('+left+' point'+(left==1?'':'s')+' left)'):'Finish and make report';
+}
+function renderItems(){
+  $('items').innerHTML=ITEMS.map(function(it,i){
+    var r=cur.res[i]||'',dz=it.d(cur.d);
+    return '<div class="item '+r+'" id="item'+i+'"><div class="q"><span class="n">'+(i+1)+'</span>'+esc(it.q)+'</div>'+
+      (dz?'<div class="design">'+esc(dz)+'</div>':'')+
+      '<div class="pf"><button class="P'+(r==='P'?' on':'')+'" data-i="'+i+'" data-r="P">&#10003; SAME</button>'+
+      '<button class="F'+(r==='F'?' on':'')+'" data-i="'+i+'" data-r="F">&#10007; WRONG</button>'+
+      '<button class="N'+(r==='N'?' on':'')+'" data-i="'+i+'" data-r="N">Not here</button></div>'+
+      (r==='F'?'<input type="text" id="note'+i+'" data-note="'+i+'" placeholder="What is wrong? (short)" value="'+esc(cur.notes[i]||'')+'">':'')+'</div>';
+  }).join('');
+}
+$('items').onclick=function(e){
+  var b=e.target.closest('button[data-r]');if(!b)return;
+  var i=+b.dataset.i,r=b.dataset.r;cur.res[i]=r;
+  if(r==='F'){cur.marking=i;}
+  else{cur.marks=cur.marks.filter(function(m){return m.n!==i+1;});delete cur.notes[i];if(cur.marking===i)cur.marking=null;}
+  renderItems();redraw();
+  if(r==='F')$('photoWrap').scrollIntoView({behavior:'smooth',block:'start'});
+};
+$('items').oninput=function(e){if(e.target.dataset.note!=null)cur.notes[+e.target.dataset.note]=e.target.value;};
+$('photo').addEventListener('pointerdown',function(e){
+  if(cur.marking==null){var f=Object.keys(cur.res).filter(function(k){return cur.res[k]==='F';});if(!f.length)return;cur.marking=+f[f.length-1];}
+  var r=this.getBoundingClientRect();cur.marks.push({x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height,n:cur.marking+1});
+  var i=cur.marking;cur.marking=null;redraw();
+  var el=$('item'+i);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+});
+$('undoMark').onclick=function(){cur.marks.pop();redraw();};
+$('showDrawing').onclick=function(){var im=$('drawingImg');im.hidden=!im.hidden;this.textContent=im.hidden?'Show P.E. drawing':'Hide P.E. drawing';};
+
+/* signature */
+var sig=$('sig'),sx=sig.getContext('2d'),signed=false,drawing=false;
+function sizeSig(){var w=sig.clientWidth||300;sig.width=w*2;sig.height=300;sx.lineWidth=5;sx.lineCap='round';sx.strokeStyle='#10212e';signed=false;}
+function clearSig(){sx.clearRect(0,0,sig.width,sig.height);signed=false;}
+function sp(e){var r=sig.getBoundingClientRect();return [(e.clientX-r.left)*sig.width/r.width,(e.clientY-r.top)*sig.height/r.height];}
+sig.addEventListener('pointerdown',function(e){drawing=true;var p=sp(e);sx.beginPath();sx.moveTo(p[0],p[1]);e.preventDefault();});
+sig.addEventListener('pointermove',function(e){if(!drawing)return;var p=sp(e);sx.lineTo(p[0],p[1]);sx.stroke();signed=true;});
+['pointerup','pointerleave','pointercancel'].forEach(function(n){sig.addEventListener(n,function(){drawing=false;});});
+$('clearSig').onclick=clearSig;
+
+$('finish').onclick=function(){
+  var missing=[];for(var i=0;i<ITEMS.length;i++)if(!cur.res[i]){missing.push(i);}
+  if(missing.length){alert('Answer point '+(missing[0]+1)+' first. '+missing.length+' point(s) not answered.');$('item'+missing[0]).scrollIntoView({behavior:'smooth',block:'center'});return;}
+  var noMark=Object.keys(cur.res).filter(function(k){return cur.res[k]==='F'&&!cur.marks.some(function(m){return m.n===+k+1;});});
+  if(noMark.length){cur.marking=+noMark[0];redraw();$('photoWrap').scrollIntoView({behavior:'smooth'});alert('Tap the photo to show where point '+(+noMark[0]+1)+' is wrong.');return;}
+  if(!$('who').value.trim()){alert('Type your name.');$('who').focus();return;}
+  if(!signed){alert('Sign in the box.');sig.scrollIntoView({behavior:'smooth',block:'center'});return;}
+  store.set('scf.who',$('who').value.trim());buildReport();show('report');
+};
+
+/* ---------------- report ---------------- */
+function wrap(x,text,maxW){var words=String(text).split(/\s+/),lines=[],line='';words.forEach(function(w){var t=line?line+' '+w:w;if(x.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;});if(line)lines.push(line);return lines;}
+var reportName='';
+function buildReport(){
+  var d=cur.d,W=1080,P=40,c=$('reportCanvas'),x=c.getContext('2d');
+  var fails=Object.keys(cur.res).filter(function(k){return cur.res[k]==='F';}).length,ok=fails===0;
+  var now=new Date(),pad=function(n){return n<10?'0'+n:n;};
+  var stamp=pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+', '+pad(now.getHours())+pad(now.getMinutes())+'HRS';
+  reportName='Scaffold check - '+safeName(d.name)+' - '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+pad(now.getMinutes())+'.jpg';
+  var F1='bold 30px Arial',F2='26px Arial',F3='bold 26px Arial';
+  x.font=F1;var nameLines=wrap(x,d.name,W-2*P);
+  var rows=ITEMS.map(function(it,i){
+    x.font=F3;var a=wrap(x,(i+1)+'. '+it.q,W-2*P-190),dz=it.d(d),b=[];
+    x.font=F2;if(dz)b=b.concat(wrap(x,dz,W-2*P-190));if(cur.res[i]==='F'&&cur.notes[i])b=b.concat(wrap(x,'Problem: '+cur.notes[i],W-2*P-190));
+    return {a:a,b:b,r:cur.res[i],h:(a.length+b.length)*34+26};
+  });
+  var photoW=W-2*P,photoH=Math.round(photoW*cur.img.height/cur.img.width);
+  var headH=150+nameLines.length*38,bannerH=110,H=headH+bannerH+20+photoH+30+rows.reduce(function(s,r){return s+r.h;},0)+300;
+  c.width=W;c.height=H;c.style.width='100%';
+  x.fillStyle='#fff';x.fillRect(0,0,W,H);
+  x.fillStyle='#12324a';x.fillRect(0,0,W,headH);
+  x.fillStyle='#fff';x.textBaseline='top';x.textAlign='left';x.font='bold 40px Arial';x.fillText('SCAFFOLD DESIGN CHECK',P,28);
+  x.font=F1;nameLines.forEach(function(l,i){x.fillText(l,P,84+i*38);});
+  x.font=F2;x.fillText('P.E. design: '+(d.ref||'not stated')+'    '+stamp,P,92+nameLines.length*38);
+  var y=headH;x.fillStyle=ok?'#12803f':'#c81e1e';x.fillRect(0,y,W,bannerH);
+  x.fillStyle='#fff';x.textAlign='center';x.font='bold 40px Arial';
+  x.fillText(ok?'SAME AS P.E. DESIGN':'NOT AS PER DESIGN: '+fails+' POINT'+(fails==1?'':'S')+' WRONG',W/2,y+16);
+  x.font=F2;x.fillText(ok?'No difference seen in this photo check':'Stop use. Inform the scaffold supervisor.',W/2,y+66);
+  y+=bannerH+20;x.textAlign='left';
+  var pc=document.createElement('canvas');drawPhoto(pc,cur.img,cur.marks,photoW);x.drawImage(pc,P,y);y+=photoH+30;
+  rows.forEach(function(r){
+    x.strokeStyle='#c9d3db';x.lineWidth=2;x.beginPath();x.moveTo(P,y);x.lineTo(W-P,y);x.stroke();
+    var ty=y+13;x.fillStyle='#10212e';x.font=F3;r.a.forEach(function(l){x.fillText(l,P,ty);ty+=34;});
+    x.font=F2;x.fillStyle='#3d4f5c';r.b.forEach(function(l){x.fillText(l,P,ty);ty+=34;});
+    var col=r.r==='P'?'#12803f':r.r==='F'?'#c81e1e':'#6b7780',lab=r.r==='P'?'SAME':r.r==='F'?'WRONG':'N/A';
+    x.fillStyle=col;x.fillRect(W-P-160,y+12,160,46);x.fillStyle='#fff';x.font='bold 26px Arial';x.textAlign='center';x.fillText(lab,W-P-80,y+22);x.textAlign='left';
+    y+=r.h;
+  });
+  x.strokeStyle='#c9d3db';x.beginPath();x.moveTo(P,y);x.lineTo(W-P,y);x.stroke();y+=20;
+  x.fillStyle='#10212e';x.font=F3;x.fillText('Checked by: '+$('who').value.trim(),P,y);
+  x.drawImage(sig,P,y+40,400,400*sig.height/sig.width);
+  x.font='22px Arial';x.fillStyle='#5a6b78';
+  wrap(x,'Photo comparison against the P.E. design key points. It does not replace the scaffold supervisor’s inspection.',W-2*P-440).forEach(function(l,i){x.fillText(l,P+440,y+60+i*30);});
+  var box=$('resultBox');box.className='result '+(ok?'ok':'bad');box.textContent=ok?'SAME AS P.E. DESIGN':'NOT AS PER DESIGN. STOP USE AND INFORM THE SCAFFOLD SUPERVISOR.';
+  $('title').textContent='Report';
+}
+function reportBlob(cb){$('reportCanvas').toBlob(cb,'image/jpeg',0.85);}
+$('shareReport').onclick=function(){reportBlob(function(b){shareFile(b,reportName,'Scaffold design check: '+cur.d.name);});};
+$('saveReport').onclick=function(){reportBlob(function(b){saveBlob(b,reportName);});};
+$('again').onclick=function(){renderHome();show('home');};
+window.addEventListener('resize',function(){if(cur&&cur.img&&!$('check').hidden)redraw();});
+
+renderHome();show('home');
+})();
+</script>
+</body>
+</html>
